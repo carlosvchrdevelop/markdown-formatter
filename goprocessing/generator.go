@@ -1,4 +1,4 @@
-package main
+package goprocessing
 
 import (
 	"log"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func genFile (path string, options Options) {
+func GenFile (path string, options Options) {
 
 	var lines = []string{}
  
@@ -16,25 +16,25 @@ func genFile (path string, options Options) {
 	})
 
 	var file string = strings.Join(lines, "\n")
-	var relpath, err = filepath.Rel(filepath.Join(options.outdir, path),options.outdir)
+	var relpath, err = filepath.Rel(filepath.Join(options.Outdir, path),options.Outdir)
 
 	if err != nil {
 		log.Println(err)
 	}
 
-	if options.genFullPage {
-		wrapFullPage(filepath.Join(relpath,"mpstyles.css"), &file)
+	if options.GenFullPage {
+		WrapFullPage(filepath.Join(relpath,"mpstyles.css"), &file)
 	}
 
-	writeFile(strings.Replace(filepath.Join(options.outdir, path), ".md", ".html", 1), file)
+	writeFile(strings.Replace(filepath.Join(options.Outdir, path), ".md", ".html", 1), file)
 }
 
-func genCss (options Options) {
-	writeFile(filepath.Join(options.outdir, "mpstyles.css"), readFile("./mpstyles.css") + "\n" + options.externalCss)
+func GenCss (options Options) {
+	writeFile(filepath.Join(options.Outdir, "mpstyles.css"), readFile("./mpstyles.css") + "\n" + options.ExternalCss)
 }
 
-func genIndexPage (options Options) {
-	writeFile(filepath.Join(options.outdir, "index.html"), getIndexPage(options.paths))
+func GenIndexPage (options Options) {
+	writeFile(filepath.Join(options.Outdir, "index.html"), getIndexPage(options.Paths))
 }
 
 func getIndexPage (references []string) string {
@@ -44,11 +44,11 @@ func getIndexPage (references []string) string {
 		var curfpath = strings.Replace(e, filepath.Ext(e), ".html", 1)
 		page += "<a href='"+curfpath+"'>"+curfname+"</a>"
 	}
-	wrapFullPage("mpstyles.css", &page)
+	WrapFullPage("mpstyles.css", &page)
 	return page
 }
 
-func wrapFullPage (path string, file *string) {
+func WrapFullPage (path string, file *string) {
 	var pre = `
 <!DOCTYPE html>
 <html lang="en">

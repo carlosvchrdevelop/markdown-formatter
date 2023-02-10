@@ -1,4 +1,4 @@
-package main
+package goprocessing
 
 import (
 	"bufio"
@@ -30,13 +30,13 @@ func processLines (path string, f func(line string)) {
 func writeFile (path string, text string) {
     var dirpath string = filepath.Dir(path)
 
-    err := os.MkdirAll(dirpath, os.ModePerm)
+    err := os.MkdirAll(dirpath, 0777)
 	if err != nil {
 		log.Println(err)
 	}
 
     data := []byte(text)
-    err = ioutil.WriteFile(path, data, 0)
+    err = ioutil.WriteFile(path, data, 0777)
 
     if err != nil {
         log.Fatal(err)

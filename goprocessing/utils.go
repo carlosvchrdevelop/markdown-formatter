@@ -1,8 +1,8 @@
-package main
+package goprocessing
 
 import "time"
 
-func timing (f func()) float32 {
+func Timing (f func()) float32 {
 	start := time.Now()
 	f()
 	elapsed := time.Since(start)

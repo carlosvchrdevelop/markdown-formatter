@@ -1,10 +1,11 @@
-package main
+package goprocessing
 
 import (
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"workspace/gocolor"
 )
 
 const help string = `
@@ -25,24 +26,25 @@ Options:
 `
 
 type Options struct {
-	externalCss string
-	genFullPage bool
-	outdir string
-	genIndexPage bool
-	paths []string
+	ExternalCss string
+	GenFullPage bool
+	Outdir string
+	GenIndexPage bool
+	Paths []string
 }
 
-func readArguments () Options {
+func ReadArguments () Options {
 
 	var options Options = Options {
-		externalCss: "",
-		genFullPage: true,
-		genIndexPage: false,
-		outdir: "./",
+		ExternalCss: "",
+		GenFullPage: true,
+		GenIndexPage: false,
+		Outdir: "./",
 	}
 
 	if len(os.Args) < 2 {
-		log.Fatal("[ERROR] Unexpected number of parameters. Run 'mf --help' for more information.")
+		fmt.Print(gocolor.Red+"[ERROR]"+gocolor.Reset+" ")
+		log.Fatal("Unexpected number of parameters. Run 'mf --help' for more information.")
 	}
 
 	if os.Args[1] == "-h" || os.Args[1] == "--help" {
@@ -50,29 +52,30 @@ func readArguments () Options {
 		os.Exit(0)
 	}
 
-	options.paths = findFiles(os.Args[len(os.Args)-1], ".md")
+	options.Paths = findFiles(os.Args[len(os.Args)-1], ".md")
 
-	if len(options.paths) == 0 {
-		log.Fatal("[ERROR] No .md format file could be found.")
+	if len(options.Paths) == 0 {
+		fmt.Print(gocolor.Red+"[ERROR]"+gocolor.Reset+" ")
+		log.Fatal("No .md format file could be found.")
 	}
 
 	for i:=1; i < len(os.Args); i++ {
 		if strings.HasPrefix(os.Args[i], "-") && strings.Contains(os.Args[i], "p") {
-			options.genFullPage = false
+			options.GenFullPage = false
 		}
 
 		if strings.HasPrefix(os.Args[i], "-") && strings.Contains(os.Args[i], "i") {
-			options.genIndexPage = true
+			options.GenIndexPage = true
 		}
 
 		if os.Args[i] == "-s" || os.Args[i] == "--css"{
 			i += 1
-			options.externalCss = readFile(os.Args[i])
+			options.ExternalCss = readFile(os.Args[i])
 		}
 
 		if os.Args[i] == "-o" || os.Args[i] == "--outdir" {
 			i += 1
-			options.outdir = os.Args[i]
+			options.Outdir = os.Args[i]
 		}
 		
 

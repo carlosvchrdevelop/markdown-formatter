@@ -1,4 +1,4 @@
-package main
+package goprocessing
 
 const prefix = "mp"
 const highlightClose = "</span>"
