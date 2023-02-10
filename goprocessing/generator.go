@@ -29,12 +29,12 @@ func GenFile (path string, options Options) {
 	writeFile(strings.Replace(filepath.Join(options.Outdir, path), ".md", ".html", 1), file)
 }
 
-func GenCss (options Options) {
-	writeFile(filepath.Join(options.Outdir, "mpstyles.css"), readFile("./mpstyles.css") + "\n" + options.ExternalCss)
+func GenCss (path string, options Options) {
+	writeFile(path, readFile("./mpstyles.css") + "\n" + options.ExternalCss)
 }
 
-func GenIndexPage (options Options) {
-	writeFile(filepath.Join(options.Outdir, "index.html"), getIndexPage(options.Paths))
+func GenIndexPage (path string, options Options) {
+	writeFile(path, getIndexPage(options.Paths))
 }
 
 func getIndexPage (references []string) string {

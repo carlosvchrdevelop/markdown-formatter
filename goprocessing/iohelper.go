@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func processLines (path string, f func(line string)) {
@@ -53,7 +54,7 @@ func readFile (path string) string {
     return string(content)
 }
 
-func findFiles(root, ext string) []string {
+func findFiles (root, ext string) []string {
     var a []string
     filepath.WalkDir(root, func(s string, d fs.DirEntry, e error) error {
         if e != nil { return e }
@@ -63,4 +64,48 @@ func findFiles(root, ext string) []string {
         return nil
     })
     return a
+}
+
+func GetModifiedFiles (options Options) []string {
+    var modifiedFiles []string
+    for _, e := range options.Paths {
+        if !IsFileUpdated(e, options) {
+            modifiedFiles = append(modifiedFiles, e)
+        }
+    }
+    return modifiedFiles
+}
+
+func IsFileUpdated (path string, options Options) bool {
+
+    if options.ForceGeneration {
+        return false
+    }
+
+    var cleanPathParts []string = strings.Split(path, ".")
+    var generatedFilePath string = strings.Join(cleanPathParts[0 : len(cleanPathParts)-1], "")
+    var extension string = cleanPathParts[len(cleanPathParts)-1]
+
+    if extension == "md" {
+        generatedFilePath += ".html"
+    } else if extension == "css" {
+        generatedFilePath += ".css"
+    } else if extension == "html" {
+        generatedFilePath += ".html"
+    }
+        
+    mdinfo, err := os.Stat(path)
+    
+    if err != nil  {
+        log.Fatal(err)
+    }
+    
+    generatedFilePath = filepath.Join(options.Outdir, generatedFilePath)
+    genfileinfo, errgen := os.Stat(generatedFilePath)
+
+    if errgen != nil  {
+		return false
+    }
+
+    return mdinfo.ModTime().Before(genfileinfo.ModTime())
 }
