@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func ProcessLines (path string, f func(line string)) {
@@ -76,7 +77,23 @@ func GetModifiedFiles (paths []string, outdir string) []string {
     return modifiedFiles
 }
 
-func IsDestUpdated (path string, path2 string) bool {
+func AlreadyExistsIndex (outdir string) bool {
+    _, err := os.Stat(filepath.Join(outdir, "index.html"))
+    return err == nil
+}
+
+func UpdateOutdirInfo (outdir string) {
+    fileName := outdir
+    currentTime := time.Now().Local()
+
+    //Set both access time and modified time of the file to the current time
+    err := os.Chtimes(fileName, currentTime, currentTime)
+    if err != nil {
+        log.Panic(err)
+    }
+}
+
+func IsNewContent (path string, path2 string) bool {
     originInfo, err := os.Stat(path)
 
     if err != nil  {
@@ -85,7 +102,11 @@ func IsDestUpdated (path string, path2 string) bool {
 
     destInfo, err := os.Stat(path2)
 
-    return originInfo.ModTime().Before(destInfo.ModTime())
+    if err != nil {
+        return true
+    }
+
+    return originInfo.ModTime().After(destInfo.ModTime())
 }
 
 func IsFileUpdated (path string, outdir string) bool {

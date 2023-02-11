@@ -13,6 +13,7 @@ import (
 
 var lock sync.Mutex
 
+/// TODO: PERMITIR RECIBIR UN LAYOUT COMO PARAMETRO CON ALGUNA ETIQUETA @MP_INCLUDE o @MP_INCLUDE_PART
 func main() {
 	goconsole.CallClear()
 	fmt.Println("Watching files for changes...")
@@ -20,51 +21,77 @@ func main() {
 }
 
 func start() {
-	/// TODO: PERMITIR RECIBIR UN LAYOUT COMO PARAMETRO CON ALGUNA ETIQUETA @MP_INCLUDE o @MP_INCLUDE_PART
 	var options goconsole.Options = goconsole.ReadArguments()
-
+	isNewContent := goio.IsNewContent(options.Path, options.Outdir)
+	
 	infoTasks := make(map[int]string)
 
-	var wg sync.WaitGroup
+	// Parse md files and generate HTML
+	isSomeFileModified := genFiles(options, infoTasks)
+	
+	shouldGenCSS := !goio.IsFileUpdated("mpstyles.css", options.Outdir) || options.ForceGeneration
+	shouldGenIndex := ((isNewContent || !goio.AlreadyExistsIndex(options.Outdir)) && options.GenIndexPage) || options.ForceGeneration
 
-	fmt.Println(goio.IsDestUpdated(options.Path, options.Outdir))
-	if !goio.IsDestUpdated(options.Path, options.Outdir){
-		restart(false)
+	// Repaint output if none 
+	if (shouldGenCSS || shouldGenIndex) && !isSomeFileModified {
+		goconsole.CallClear()
+		print(infoTasks)
 	}
 
-	modifiedFiles := goio.GetModifiedFiles(options.Paths, options.Outdir)
-
-	for i, e := range modifiedFiles {
-		if !goio.IsFileUpdated(e, options.Outdir) || options.ForceGeneration {
-			wg.Add(1)
-			go processAsyncFile(&wg, i, e, options, len(modifiedFiles), infoTasks)
-			i++
-		}
-	}
-
-	wg.Wait()
-
-	if !goio.IsFileUpdated("mpstyles.css", options.Outdir) || options.ForceGeneration {
+	// Generates styles
+	if shouldGenCSS {
 		generateCss(options)
 	}
 
-	if (options.GenIndexPage && len(modifiedFiles) > 0) || options.ForceGeneration {
+	// Generates index.html if specified in input arguments and there are new content
+	if shouldGenIndex {
 		generateIndex(options)
 	}
 
+	// If any update, forces mtime of directory (this performs looking for changed files)
+	anyUpdate := isSomeFileModified || shouldGenCSS || shouldGenIndex
+	if anyUpdate {
+		goio.UpdateOutdirInfo(options.Outdir)
+	}
 
+	// If watch mode activated, keep watching for changes
 	if options.WatchMode {
-		restart(len(modifiedFiles) > 0)
+		restart(anyUpdate, options.Outdir)
 	}
 }
 
-func restart (modifiedFiles bool) {
+func genFiles (options goconsole.Options, infoTasks map[int]string) bool {
+	var filesToParse []string
+
+	if options.ForceGeneration {
+		filesToParse = options.Paths
+	} else {
+		// Check if any change in input files
+		filesToParse = goio.GetModifiedFiles(options.Paths, options.Outdir)
+	}
+	
+	var wg sync.WaitGroup
+	// For every modified file, it starts an async process
+	for i, e := range filesToParse {
+		wg.Add(1)
+		go processAsyncFile(&wg, i, e, options, len(filesToParse), infoTasks)
+		i++
+	}
+
+	// Wait for all async file processing for finishing
+	wg.Wait()
+
+	return len(filesToParse) > 0
+}
+
+func restart (modifiedFiles bool, outdir string) {
+	defer start()
 	if modifiedFiles {
+		goio.UpdateOutdirInfo(outdir)
 		fmt.Printf("Last update at %v\n\n", time.Now())
 		fmt.Println("Watching files for changes...")
 	}
 	time.Sleep(1 * time.Second)
-	start()
 }
 
 func processAsyncFile(wg *sync.WaitGroup, i int, e string, options goconsole.Options, totalFiles int, infoTasks map[int]string) {
@@ -76,6 +103,7 @@ func processAsyncFile(wg *sync.WaitGroup, i int, e string, options goconsole.Opt
 	print(infoTasks)
 }
 
+// Uptades infoTasks struct without collisions among process
 func updateInfoTask (infoTasks map[int]string, item int, value string, append bool) {
 	lock.Lock()
 	defer lock.Unlock()
@@ -100,6 +128,7 @@ func generateIndex(options goconsole.Options) {
 	fmt.Printf(goconsole.Yellow+" (%.1f ms)\n"+goconsole.Reset, timingResult)
 }
 
+// Prints output without collisions among process
 func print(infoTasks map[int]string) {
     lock.Lock()
     defer lock.Unlock()

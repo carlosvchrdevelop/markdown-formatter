@@ -25,9 +25,10 @@ var reservedWords = map[string][]string{
 
 var lang = NONE
 
-func processCode (line *string) {
+func processCode (line *string) bool {
 	changeLang(line)
 	addCodeStyling(line)
+	return lang != NONE
 }
 
 func changeLang (line *string) {
