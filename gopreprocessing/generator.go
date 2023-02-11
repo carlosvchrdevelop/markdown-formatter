@@ -6,6 +6,7 @@ import (
 	"strings"
 	"workspace/goconsole"
 	"workspace/goio"
+	"workspace/gostyles"
 )
 
 func GenFile (path string, options goconsole.Options) {
@@ -25,14 +26,14 @@ func GenFile (path string, options goconsole.Options) {
 	}
 
 	if options.GenFullPage {
-		WrapFullPage(filepath.Join(relpath,"mpstyles.css"), &file)
+		WrapFullPage(filepath.Join(relpath, gostyles.FILENAME), &file)
 	}
 
 	goio.WriteFile(strings.Replace(filepath.Join(options.Outdir, path), ".md", ".html", 1), file)
 }
 
 func GenCss (path string, options goconsole.Options) {
-	goio.WriteFile(path, goio.ReadFile("./mpstyles.css") + "\n" + options.ExternalCss)
+	goio.WriteFile(path, gostyles.CSS + "\n" + options.ExternalCss)
 }
 
 func GenIndexPage (path string, options goconsole.Options) {
@@ -44,9 +45,9 @@ func getIndexPage (references []string) string {
 	for _, e := range references {
 		var curfname = strings.Replace(filepath.Base(e), filepath.Ext(e), "", 1)
 		var curfpath = strings.Replace(e, filepath.Ext(e), ".html", 1)
-		page += "<a href='"+curfpath+"'>"+curfname+"</a>"
+		page += "<a href='"+curfpath+"'>"+curfname+"</a><br>"
 	}
-	WrapFullPage("mpstyles.css", &page)
+	WrapFullPage(gostyles.FILENAME, &page)
 	return page
 }
 

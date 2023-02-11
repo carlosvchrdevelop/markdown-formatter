@@ -1,3 +1,8 @@
+package gostyles
+
+const FILENAME string = "mpstyles.css"
+
+const CSS string = `
 @import url('https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono&display=swap');
 
 * {
@@ -44,3 +49,4 @@ code::selection,
 code *::selection {
     background-color: transparent;
 }
+`

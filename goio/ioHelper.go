@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -38,7 +37,7 @@ func WriteFile (path string, text string) {
 	}
 
     data := []byte(text)
-    err = ioutil.WriteFile(path, data, 0777)
+    err = os.WriteFile(path, data, 0777)
 
     if err != nil {
         log.Fatal(err)
@@ -46,7 +45,7 @@ func WriteFile (path string, text string) {
 }
 
 func ReadFile (path string) string {
-    content, err := ioutil.ReadFile(path)
+    content, err := os.ReadFile(path)
 
     if err != nil {
         log.Fatal(err)
@@ -79,6 +78,11 @@ func GetModifiedFiles (paths []string, outdir string) []string {
 
 func AlreadyExistsIndex (outdir string) bool {
     _, err := os.Stat(filepath.Join(outdir, "index.html"))
+    return err == nil
+}
+
+func AlreadyExistsCSS(outdir string, cssfilename string) bool {
+    _, err := os.Stat(filepath.Join(outdir, cssfilename))
     return err == nil
 }
 

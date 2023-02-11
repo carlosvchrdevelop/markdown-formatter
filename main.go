@@ -8,6 +8,7 @@ import (
 	"workspace/goconsole"
 	"workspace/goio"
 	"workspace/gopreprocessing"
+	"workspace/gostyles"
 	"workspace/goutils"
 )
 
@@ -29,7 +30,8 @@ func start() {
 	// Parse md files and generate HTML
 	isSomeFileModified := genFiles(options, infoTasks)
 	
-	shouldGenCSS := !goio.IsFileUpdated("mpstyles.css", options.Outdir) || options.ForceGeneration
+	// FIX: Esto no actualiza el CSS en caso de que se inserte un CSS con -s y se modifique
+	shouldGenCSS := !goio.AlreadyExistsCSS(options.Outdir, gostyles.FILENAME) || options.ForceGeneration
 	shouldGenIndex := ((isNewContent || !goio.AlreadyExistsIndex(options.Outdir)) && options.GenIndexPage) || options.ForceGeneration
 
 	// Repaint output if none 
@@ -115,7 +117,7 @@ func updateInfoTask (infoTasks map[int]string, item int, value string, append bo
 }
 
 func generateCss(options goconsole.Options) {
-	var pathToCss string = filepath.Join(options.Outdir, "mpstyles.css")
+	var pathToCss string = filepath.Join(options.Outdir, gostyles.FILENAME)
 	fmt.Printf(goconsole.Blue+"[CSS] "+goconsole.Reset+"Generating styles file")
 	timingResult := goutils.Timing(func(){gopreprocessing.GenCss(pathToCss, options)})
 	fmt.Printf(goconsole.Yellow+" (%.1f ms)\n"+goconsole.Reset, timingResult)
