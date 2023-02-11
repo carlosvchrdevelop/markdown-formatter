@@ -1,4 +1,4 @@
-package goprocessing
+package goio
 
 import (
 	"bufio"
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func processLines (path string, f func(line string)) {
+func ProcessLines (path string, f func(line string)) {
     readFile, err := os.Open(path)
   
     if err != nil {
@@ -28,7 +28,7 @@ func processLines (path string, f func(line string)) {
     readFile.Close()
 }
 
-func writeFile (path string, text string) {
+func WriteFile (path string, text string) {
     var dirpath string = filepath.Dir(path)
 
     err := os.MkdirAll(dirpath, 0777)
@@ -44,7 +44,7 @@ func writeFile (path string, text string) {
     }
 }
 
-func readFile (path string) string {
+func ReadFile (path string) string {
     content, err := ioutil.ReadFile(path)
 
     if err != nil {
@@ -54,7 +54,7 @@ func readFile (path string) string {
     return string(content)
 }
 
-func findFiles (root, ext string) []string {
+func FindFiles (root, ext string) []string {
     var a []string
     filepath.WalkDir(root, func(s string, d fs.DirEntry, e error) error {
         if e != nil { return e }
@@ -66,21 +66,29 @@ func findFiles (root, ext string) []string {
     return a
 }
 
-func GetModifiedFiles (options Options) []string {
+func GetModifiedFiles (paths []string, outdir string) []string {
     var modifiedFiles []string
-    for _, e := range options.Paths {
-        if !IsFileUpdated(e, options) {
+    for _, e := range paths {
+        if !IsFileUpdated(e, outdir) {
             modifiedFiles = append(modifiedFiles, e)
         }
     }
     return modifiedFiles
 }
 
-func IsFileUpdated (path string, options Options) bool {
+func IsDestUpdated (path string, path2 string) bool {
+    originInfo, err := os.Stat(path)
 
-    if options.ForceGeneration {
-        return false
+    if err != nil  {
+		log.Panic(err)
     }
+
+    destInfo, err := os.Stat(path2)
+
+    return originInfo.ModTime().Before(destInfo.ModTime())
+}
+
+func IsFileUpdated (path string, outdir string) bool {
 
     var cleanPathParts []string = strings.Split(path, ".")
     var generatedFilePath string = strings.Join(cleanPathParts[0 : len(cleanPathParts)-1], "")
@@ -100,7 +108,7 @@ func IsFileUpdated (path string, options Options) bool {
         log.Fatal(err)
     }
     
-    generatedFilePath = filepath.Join(options.Outdir, generatedFilePath)
+    generatedFilePath = filepath.Join(outdir, generatedFilePath)
     genfileinfo, errgen := os.Stat(generatedFilePath)
 
     if errgen != nil  {

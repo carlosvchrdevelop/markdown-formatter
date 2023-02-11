@@ -1,4 +1,4 @@
-package goprocessing
+package goutils
 
 import "time"
 

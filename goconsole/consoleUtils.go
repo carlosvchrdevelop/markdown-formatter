@@ -1,4 +1,4 @@
-package goprocessing
+package goconsole
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"workspace/gocolor"
+	"workspace/goio"
 )
 
 const help string = `
@@ -43,6 +43,7 @@ type Options struct {
 	Outdir string
 	GenIndexPage bool
 	Paths []string
+	Path string
 	WatchMode bool
 	ForceGeneration bool
 }
@@ -57,10 +58,11 @@ func ReadArguments () Options {
 		Paths: []string{},
 		WatchMode: false,
 		ForceGeneration: false,
+		Path: "",
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Print(gocolor.Red+"[ERROR]"+gocolor.Reset+" ")
+		fmt.Print(Red+"[ERROR]"+Reset+" ")
 		log.Fatal("Unexpected number of parameters. Run 'mf --help' for more information.")
 	}
 
@@ -68,12 +70,12 @@ func ReadArguments () Options {
 		fmt.Print(help)
 		os.Exit(0)
 	}
-
-	options.Paths = findFiles(os.Args[len(os.Args)-1], ".md")
+	options.Path = os.Args[len(os.Args)-1]
+	options.Paths = goio.FindFiles(options.Path, ".md")
 
 	if len(options.Paths) == 0 {
-		fmt.Print(gocolor.Red+"[ERROR]"+gocolor.Reset+" ")
-		log.Fatal("No .md format file could be found.")
+		fmt.Print(Red+"[ERROR]"+Reset+" ")
+		log.Fatal("No .md format file could be found in this location.")
 	}
 
 	for i:=1; i < len(os.Args); i++ {
@@ -95,14 +97,13 @@ func ReadArguments () Options {
 
 		if os.Args[i] == "-s" || os.Args[i] == "--css"{
 			i += 1
-			options.ExternalCss = readFile(os.Args[i])
+			options.ExternalCss = goio.ReadFile(os.Args[i])
 		}
 
 		if os.Args[i] == "-o" || os.Args[i] == "--outdir" {
 			i += 1
 			options.Outdir = os.Args[i]
 		}
-		
 
 	}
 	return options

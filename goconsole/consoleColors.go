@@ -1,4 +1,4 @@
-package gocolor
+package goconsole
 
 import "runtime"
 

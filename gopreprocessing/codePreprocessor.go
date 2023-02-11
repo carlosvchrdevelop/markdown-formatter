@@ -1,4 +1,4 @@
-package goprocessing
+package gopreprocessing
 
 import (
 	"regexp"

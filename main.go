@@ -5,30 +5,37 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-	"workspace/gocolor"
-	"workspace/goprocessing"
+	"workspace/goconsole"
+	"workspace/goio"
+	"workspace/gopreprocessing"
+	"workspace/goutils"
 )
 
 var lock sync.Mutex
 
 func main() {
-	goprocessing.CallClear()
+	goconsole.CallClear()
 	fmt.Println("Watching files for changes...")
-	fmt.Printf(gocolor.Green+"[SUCCESS]"+gocolor.Reset+" All files has been processed "+gocolor.Yellow+"(Total: %.1f ms)\n"+gocolor.Reset, goprocessing.Timing(start))
+	fmt.Printf(goconsole.Green+"[SUCCESS]"+goconsole.Reset+" All files has been processed "+goconsole.Yellow+"(Total: %.1f ms)\n"+goconsole.Reset, goutils.Timing(start))
 }
 
 func start() {
 	/// TODO: PERMITIR RECIBIR UN LAYOUT COMO PARAMETRO CON ALGUNA ETIQUETA @MP_INCLUDE o @MP_INCLUDE_PART
-	var options goprocessing.Options = goprocessing.ReadArguments()
+	var options goconsole.Options = goconsole.ReadArguments()
 
 	infoTasks := make(map[int]string)
 
 	var wg sync.WaitGroup
 
-	modifiedFiles := goprocessing.GetModifiedFiles(options)
+	fmt.Println(goio.IsDestUpdated(options.Path, options.Outdir))
+	if !goio.IsDestUpdated(options.Path, options.Outdir){
+		restart(false)
+	}
+
+	modifiedFiles := goio.GetModifiedFiles(options.Paths, options.Outdir)
 
 	for i, e := range modifiedFiles {
-		if !goprocessing.IsFileUpdated(e, options){
+		if !goio.IsFileUpdated(e, options.Outdir) || options.ForceGeneration {
 			wg.Add(1)
 			go processAsyncFile(&wg, i, e, options, len(modifiedFiles), infoTasks)
 			i++
@@ -37,7 +44,7 @@ func start() {
 
 	wg.Wait()
 
-	if !goprocessing.IsFileUpdated("mpstyles.css", options){
+	if !goio.IsFileUpdated("mpstyles.css", options.Outdir) || options.ForceGeneration {
 		generateCss(options)
 	}
 
@@ -47,21 +54,25 @@ func start() {
 
 
 	if options.WatchMode {
-		if len(modifiedFiles) > 0 {
-			fmt.Printf("Last update at %v\n\n", time.Now())
-			fmt.Println("Watching files for changes...")
-		}
-		time.Sleep(1 * time.Second)
-		start()
+		restart(len(modifiedFiles) > 0)
 	}
 }
 
-func processAsyncFile(wg *sync.WaitGroup, i int, e string, options goprocessing.Options, totalFiles int, infoTasks map[int]string) {
+func restart (modifiedFiles bool) {
+	if modifiedFiles {
+		fmt.Printf("Last update at %v\n\n", time.Now())
+		fmt.Println("Watching files for changes...")
+	}
+	time.Sleep(1 * time.Second)
+	start()
+}
+
+func processAsyncFile(wg *sync.WaitGroup, i int, e string, options goconsole.Options, totalFiles int, infoTasks map[int]string) {
 	defer wg.Done()
-	updateInfoTask(infoTasks, i, fmt.Sprintf(gocolor.Blue+"[%v/%v]"+gocolor.Reset+" Processing file %v", (i+1), totalFiles, e), false)
+	updateInfoTask(infoTasks, i, fmt.Sprintf(goconsole.Blue+"[%v/%v]"+goconsole.Reset+" Processing file %v", (i+1), totalFiles, e), false)
 	print(infoTasks)
-	timingResult := goprocessing.Timing(func(){goprocessing.GenFile(e, options)})
-	updateInfoTask(infoTasks, i, fmt.Sprintf(gocolor.Yellow+" (%.1f ms)"+gocolor.Reset, timingResult), true)
+	timingResult := goutils.Timing(func(){gopreprocessing.GenFile(e, options)})
+	updateInfoTask(infoTasks, i, fmt.Sprintf(goconsole.Yellow+" (%.1f ms)"+goconsole.Reset, timingResult), true)
 	print(infoTasks)
 }
 
@@ -75,25 +86,25 @@ func updateInfoTask (infoTasks map[int]string, item int, value string, append bo
 	}
 }
 
-func generateCss(options goprocessing.Options) {
+func generateCss(options goconsole.Options) {
 	var pathToCss string = filepath.Join(options.Outdir, "mpstyles.css")
-	fmt.Printf(gocolor.Blue+"[CSS] "+gocolor.Reset+"Generating styles file")
-	timingResult := goprocessing.Timing(func(){goprocessing.GenCss(pathToCss, options)})
-	fmt.Printf(gocolor.Yellow+" (%.1f ms)\n"+gocolor.Reset, timingResult)
+	fmt.Printf(goconsole.Blue+"[CSS] "+goconsole.Reset+"Generating styles file")
+	timingResult := goutils.Timing(func(){gopreprocessing.GenCss(pathToCss, options)})
+	fmt.Printf(goconsole.Yellow+" (%.1f ms)\n"+goconsole.Reset, timingResult)
 }
 
-func generateIndex(options goprocessing.Options) {
+func generateIndex(options goconsole.Options) {
 	var pathToIndex string = filepath.Join(options.Outdir, "index.html")
-	fmt.Printf(gocolor.Blue+"[INDEX] "+gocolor.Reset+"Generating index file")
-	timingResult := goprocessing.Timing(func(){goprocessing.GenIndexPage(pathToIndex, options)})
-	fmt.Printf(gocolor.Yellow+" (%.1f ms)\n"+gocolor.Reset, timingResult)
+	fmt.Printf(goconsole.Blue+"[INDEX] "+goconsole.Reset+"Generating index file")
+	timingResult := goutils.Timing(func(){gopreprocessing.GenIndexPage(pathToIndex, options)})
+	fmt.Printf(goconsole.Yellow+" (%.1f ms)\n"+goconsole.Reset, timingResult)
 }
 
 func print(infoTasks map[int]string) {
     lock.Lock()
     defer lock.Unlock()
 	
-	goprocessing.CallClear()
+	goconsole.CallClear()
 	
 	for i:=0; i<len(infoTasks); i++ {
 		fmt.Println(infoTasks[i])

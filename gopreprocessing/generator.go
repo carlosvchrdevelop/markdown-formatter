@@ -1,16 +1,18 @@
-package goprocessing
+package gopreprocessing
 
 import (
 	"log"
 	"path/filepath"
 	"strings"
+	"workspace/goconsole"
+	"workspace/goio"
 )
 
-func GenFile (path string, options Options) {
+func GenFile (path string, options goconsole.Options) {
 
 	var lines = []string{}
  
-    processLines(path, func(line string){
+    goio.ProcessLines(path, func(line string){
 		processAll(&line)
         lines = append(lines, line)
 	})
@@ -26,15 +28,15 @@ func GenFile (path string, options Options) {
 		WrapFullPage(filepath.Join(relpath,"mpstyles.css"), &file)
 	}
 
-	writeFile(strings.Replace(filepath.Join(options.Outdir, path), ".md", ".html", 1), file)
+	goio.WriteFile(strings.Replace(filepath.Join(options.Outdir, path), ".md", ".html", 1), file)
 }
 
-func GenCss (path string, options Options) {
-	writeFile(path, readFile("./mpstyles.css") + "\n" + options.ExternalCss)
+func GenCss (path string, options goconsole.Options) {
+	goio.WriteFile(path, goio.ReadFile("./mpstyles.css") + "\n" + options.ExternalCss)
 }
 
-func GenIndexPage (path string, options Options) {
-	writeFile(path, getIndexPage(options.Paths))
+func GenIndexPage (path string, options goconsole.Options) {
+	goio.WriteFile(path, getIndexPage(options.Paths))
 }
 
 func getIndexPage (references []string) string {
