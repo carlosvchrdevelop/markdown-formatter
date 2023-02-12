@@ -5,7 +5,12 @@ import (
 	"strings"
 )
 
-var openParagraph bool
+var (
+	openParagraph bool
+	ids           string
+	classes       string
+	jsblocks      string
+)
 
 func init() {
 	openParagraph = false
@@ -15,6 +20,7 @@ func processAll(line *string) {
 	blockCode := processCode(line)
 	if !blockCode {
 		processHr(line)
+		processDecorators(line)
 		processStyles(line)
 		processParagraph(line)
 		processHeaders(line)
@@ -24,6 +30,57 @@ func processAll(line *string) {
 	}
 }
 
+// When finishes all processing, this closes all opened tags
+func processClosing() string {
+	var closingItems string
+	if openParagraph {
+		closingItems += "</p>"
+	}
+	return closingItems
+}
+
+// processDecorators processes tags like @ID, @CLASS, etc.
+func processDecorators(line *string) {
+	copyLine := strings.TrimSpace(*line)
+
+	regexClassContent := regexp.MustCompile(SeparatedCommaIdentifiers)
+	regexIDContent := regexp.MustCompile(IdentifierPattern)
+
+	if len(regexp.MustCompile(RegexID).FindString(*line)) > 0 {
+		ids = strings.TrimSpace(regexIDContent.FindString(strings.Split(copyLine, "(")[1]))
+		*line = ""
+	} else if len(regexp.MustCompile(RegexClass).FindString(*line)) > 0 {
+		matches := strings.Split(regexClassContent.FindString(strings.Split(copyLine, "(")[1]), ",")
+		for i := 0; i < len(matches); i++ {
+			matches[i] = strings.TrimSpace(matches[i])
+		}
+		classes = strings.Join(matches, " ")
+		*line = ""
+	} else if len(regexp.MustCompile(RegexJS).FindString(*line)) > 0 {
+		jsblocks = regexClassContent.FindString(strings.Split(copyLine, "(")[1])
+		*line = ""
+	}
+}
+
+// addIdentifiers generate tags for ids, classes and js calls
+func addIdentifiers(tag string) string {
+	var identifiersUnified string
+
+	if len(ids) > 0 {
+		identifiersUnified += " id='" + ids + "'"
+		ids = ""
+	}
+
+	if len(classes) > 0 {
+		identifiersUnified += " class='" + classes + "'"
+		classes = ""
+	}
+
+	// TODO: implementar JS
+
+	return strings.Split(tag, ">")[0] + identifiersUnified + ">"
+}
+
 func processParagraph(line *string) {
 	copyLine := strings.TrimSpace(*line)
 	if len(copyLine) != 0 {
@@ -31,7 +88,7 @@ func processParagraph(line *string) {
 	}
 	openParagraph = !openParagraph
 	if openParagraph {
-		*line = "<p>"
+		*line = addIdentifiers("<p>")
 	} else {
 		*line = "</p>"
 	}
@@ -39,7 +96,7 @@ func processParagraph(line *string) {
 
 func processHr(line *string) {
 	if strings.HasPrefix(strings.TrimSpace(*line), "---") {
-		*line = "<hr>"
+		*line = addIdentifiers("<hr>")
 	}
 }
 
@@ -80,19 +137,19 @@ func processStyles(line *string) {
 
 func processHeaders(line *string) {
 	if strings.HasPrefix(*line, "##### ") {
-		*line = strings.Replace(*line, "##### ", "<h5>", 1) + "</h5>"
+		*line = strings.Replace(*line, "##### ", addIdentifiers("<h5>"), 1) + "</h5>"
 	}
 	if strings.HasPrefix(*line, "#### ") {
-		*line = strings.Replace(*line, "#### ", "<h4>", 1) + "</h4>"
+		*line = strings.Replace(*line, "#### ", addIdentifiers("<h4>"), 1) + "</h4>"
 	}
 	if strings.HasPrefix(*line, "### ") {
-		*line = strings.Replace(*line, "### ", "<h3>", 1) + "</h3>"
+		*line = strings.Replace(*line, "### ", addIdentifiers("<h3>"), 1) + "</h3>"
 	}
 	if strings.HasPrefix(*line, "## ") {
-		*line = strings.Replace(*line, "## ", "<h2>", 1) + "</h2>"
+		*line = strings.Replace(*line, "## ", addIdentifiers("<h2>"), 1) + "</h2>"
 	}
 	if strings.HasPrefix(*line, "# ") {
-		*line = strings.Replace(*line, "# ", "<h1>", 1) + "</h1>"
+		*line = strings.Replace(*line, "# ", addIdentifiers("<h1>"), 1) + "</h1>"
 	}
 }
 
@@ -118,11 +175,11 @@ func processMedia(line *string) {
 			var parsed string
 			switch mediaFormats[extension] {
 			case IMAGE:
-				parsed = "<img src='" + parts[1] + "' alt='" + parts[0] + "' />"
+				parsed = addIdentifiers("<img src='" + parts[1] + "' alt='" + parts[0] + "' />")
 			case VIDEO:
-				parsed = "<video src='" + parts[1] + "' alt='" + parts[0] + "' controls ></video>"
+				parsed = addIdentifiers("<video src='"+parts[1]+"' alt='"+parts[0]+"' controls >") + "</video>"
 			case AUDIO:
-				parsed = "<audio src='" + parts[1] + "' alt='" + parts[0] + "' controls ></video>"
+				parsed = addIdentifiers("<audio src='"+parts[1]+"' alt='"+parts[0]+"' controls >") + "</audio>"
 			}
 			*line = strings.Replace(*line, ocur, parsed, 1)
 		} else {
@@ -140,7 +197,7 @@ func processLinks(line *string) {
 		var parts []string = strings.Split(ocur, "](")
 		parts[0] = strings.Replace(parts[0], "[", "", 1)
 		parts[1] = strings.Replace(parts[1], ")", "", 1)
-		var parsedLink string = "<a href='" + parts[1] + "'>" + parts[0] + "</a>"
+		var parsedLink string = addIdentifiers("<a href='"+parts[1]+"'>") + parts[0] + "</a>"
 		*line = strings.Replace(*line, ocur, parsedLink, 1)
 		ocur = regex.FindString(*line)
 	}

@@ -9,6 +9,19 @@ const (
 )
 
 const (
+	// IdentifierPattern is a pattern to find valid identifier names
+	IdentifierPattern = `[a-zA-Z_][a-zA-Z0-9_\-]*[a-zA-Z0-9]`
+	// SeparatedCommaIdentifiers is a pattern to find separated comma identifiers
+	SeparatedCommaIdentifiers = IdentifierPattern + `(( *),( *)` + IdentifierPattern + `)*`
+	// RegexClass is a regex to find patterns like @CLASS (class1, class2, class3)
+	RegexClass = `^@[cC][lL][aA][sS][sS]( *)\(( *)` + SeparatedCommaIdentifiers + `( *)\)$`
+	// RegexID is a regex to find patterns like @ID (id1, id2, id3)
+	RegexID = `^@[iD][dD]( *)\(( *)` + IdentifierPattern + `( *)\)$`
+	// RegexJS is a regex to find patterns like @JS (class1, class2, class3)
+	RegexJS = `^@[jJ][sS]( *)\(( *)` + SeparatedCommaIdentifiers + `( *)\)$`
+)
+
+const (
 	// AUDIO media format
 	AUDIO int = 0
 	// VIDEO media format

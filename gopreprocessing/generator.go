@@ -19,6 +19,8 @@ func GenFile(path string, options goconsole.Options) {
 		lines = append(lines, line)
 	})
 
+	lines = append(lines, processClosing())
+
 	var file string = strings.Join(lines, "\n")
 	var relpath, err = filepath.Rel(filepath.Join(options.Outdir, path), options.Outdir)
 
