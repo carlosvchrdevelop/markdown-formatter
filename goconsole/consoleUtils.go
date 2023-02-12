@@ -37,32 +37,34 @@ Options:
 
 `
 
+// Options read from arguments
 type Options struct {
-	ExternalCss string
-	GenFullPage bool
-	Outdir string
-	GenIndexPage bool
-	Paths []string
-	Path string
-	WatchMode bool
+	ExternalCSS     string
+	GenFullPage     bool
+	Outdir          string
+	GenIndexPage    bool
+	Paths           []string
+	Path            string
+	WatchMode       bool
 	ForceGeneration bool
 }
 
-func ReadArguments () Options {
+// ReadArguments is a function for reading the arguments passed when executed
+func ReadArguments() Options {
 
-	var options Options = Options {
-		ExternalCss: "",
-		GenFullPage: true,
-		Outdir: "./",
-		GenIndexPage: false,
-		Paths: []string{},
-		WatchMode: false,
+	var options Options = Options{
+		ExternalCSS:     "",
+		GenFullPage:     true,
+		Outdir:          "./",
+		GenIndexPage:    false,
+		Paths:           []string{},
+		WatchMode:       false,
 		ForceGeneration: false,
-		Path: "",
+		Path:            "",
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Print(Red+"[ERROR]"+Reset+" ")
+		fmt.Print(Red + "[ERROR]" + Reset + " ")
 		log.Fatal("Unexpected number of parameters. Run 'mf --help' for more information.")
 	}
 
@@ -74,11 +76,11 @@ func ReadArguments () Options {
 	options.Paths = goio.FindFiles(options.Path, ".md")
 
 	if len(options.Paths) == 0 {
-		fmt.Print(Red+"[ERROR]"+Reset+" ")
+		fmt.Print(Red + "[ERROR]" + Reset + " ")
 		log.Fatal("No .md format file could be found in this location.")
 	}
 
-	for i:=1; i < len(os.Args); i++ {
+	for i := 1; i < len(os.Args); i++ {
 		if strings.HasPrefix(os.Args[i], "-") && strings.Contains(os.Args[i], "p") {
 			options.GenFullPage = false
 		}
@@ -95,13 +97,13 @@ func ReadArguments () Options {
 			options.ForceGeneration = true
 		}
 
-		if os.Args[i] == "-s" || os.Args[i] == "--css"{
-			i += 1
-			options.ExternalCss = goio.ReadFile(os.Args[i])
+		if os.Args[i] == "-s" || os.Args[i] == "--css" {
+			i++
+			options.ExternalCSS = goio.ReadFile(os.Args[i])
 		}
 
 		if os.Args[i] == "-o" || os.Args[i] == "--outdir" {
-			i += 1
+			i++
 			options.Outdir = os.Args[i]
 		}
 
@@ -109,24 +111,27 @@ func ReadArguments () Options {
 	return options
 }
 
-var clear map[string]func() 
+var clear map[string]func()
 
 func init() {
-    clear = make(map[string]func()) 
-    clear["linux"] = func() { 
-        cmd := exec.Command("clear") 
-        cmd.Stdout = os.Stdout
-        cmd.Run()
-    }
+	clear = make(map[string]func())
+	clear["linux"] = func() {
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
 	clear["darwin"] = clear["linux"]
-    clear["windows"] = func() {
-        cmd := exec.Command("cmd", "/c", "cls") 
-        cmd.Stdout = os.Stdout
-        cmd.Run()
-    }
+	clear["windows"] = func() {
+		cmd := exec.Command("cmd", "/c", "cls")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
 }
 
+// CallClear is a function for clearing the console screen
 func CallClear() {
-    value, ok := clear[runtime.GOOS] 
-    if ok { value() }
+	value, ok := clear[runtime.GOOS]
+	if ok {
+		value()
+	}
 }
