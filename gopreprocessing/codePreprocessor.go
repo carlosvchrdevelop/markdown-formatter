@@ -62,12 +62,12 @@ func addCodeStyling(line *string) {
 	} else if strings.HasPrefix(*line, "```") {
 		*line = "</code></pre>"
 	} else if val, ok := reservedWords[lang+"words"]; ok {
-		var selectWordsReg string = "(\\b" + strings.Join(val, "\\b|\\b") + "\\b)"
-		var regexWords = regexp.MustCompile(selectWordsReg)
+		selectWordsReg := "(\\b" + strings.Join(val, "\\b|\\b") + "\\b)"
+		regexWords := regexp.MustCompile(selectWordsReg)
 		*line = regexWords.ReplaceAllString(*line, reservedWordHighlightOpen+"${0}"+highlightClose)
-		var stringsReg = regexp.MustCompile(`".*"`)
+		stringsReg := regexp.MustCompile(`".*"`)
 		*line = stringsReg.ReplaceAllString(*line, stringsHighlightOpen+"${0}"+highlightClose)
-		var symbolsReg = regexp.MustCompile(`[;:(){}[\]]`)
+		symbolsReg := regexp.MustCompile(`[;:(){}[\]]`)
 		*line = symbolsReg.ReplaceAllString(*line, symbolHighlightOpen+"${0}"+highlightClose)
 	}
 }

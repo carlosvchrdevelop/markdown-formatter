@@ -12,7 +12,7 @@ import (
 // GenFile generates html files from markdown
 func GenFile(path string, options goconsole.Options) {
 
-	var lines = []string{}
+	var lines []string
 
 	goio.ProcessLines(path, func(line string) {
 		processAll(&line)
@@ -21,8 +21,8 @@ func GenFile(path string, options goconsole.Options) {
 
 	lines = append(lines, processClosing())
 
-	var file string = strings.Join(lines, "\n")
-	var relpath, err = filepath.Rel(filepath.Join(options.Outdir, path), options.Outdir)
+	file := strings.Join(lines, "\n")
+	relpath, err := filepath.Rel(filepath.Join(options.Outdir, path), options.Outdir)
 
 	if err != nil {
 		log.Println(err)
@@ -46,7 +46,7 @@ func GenIndexPage(path string, options goconsole.Options) {
 }
 
 func getIndexPage(references []string) string {
-	var page string = ""
+	var page string
 	for _, e := range references {
 		var curfname = strings.Replace(filepath.Base(e), filepath.Ext(e), "", 1)
 		var curfpath = strings.Replace(e, filepath.Ext(e), ".html", 1)

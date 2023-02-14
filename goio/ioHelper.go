@@ -31,9 +31,9 @@ func ProcessLines(path string, f func(line string)) {
 
 // WriteFile is a function for writting files given the path and value to write
 func WriteFile(path string, text string) {
-	var dirpath string = filepath.Dir(path)
-
+	dirpath := filepath.Dir(path)
 	err := os.MkdirAll(dirpath, 0777)
+
 	if err != nil {
 		log.Println(err)
 	}
@@ -127,9 +127,9 @@ func IsNewContent(path string, path2 string) bool {
 // IsFileUpdated retrieves whether a file has been generated after its modification or not
 func IsFileUpdated(path string, outdir string) bool {
 
-	var cleanPathParts []string = strings.Split(path, ".")
-	var generatedFilePath string = strings.Join(cleanPathParts[0:len(cleanPathParts)-1], "")
-	var extension string = cleanPathParts[len(cleanPathParts)-1]
+	cleanPathParts := strings.Split(path, ".")
+	generatedFilePath := strings.Join(cleanPathParts[0:len(cleanPathParts)-1], "")
+	extension := cleanPathParts[len(cleanPathParts)-1]
 
 	if extension == "md" {
 		generatedFilePath += ".html"

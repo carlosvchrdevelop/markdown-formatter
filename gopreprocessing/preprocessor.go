@@ -101,12 +101,12 @@ func processHr(line *string) {
 }
 
 func processStyles(line *string) {
-	var regexBold = regexp.MustCompile(`(\*\*[^\*]*\*\*)|(__[^_]*__)`)
-	var regexItalic = regexp.MustCompile(`(\*[^\*]*\*)|(_[^_]*_)`)
-	var regexStrike = regexp.MustCompile(`(\~~[^\~]*\~~)`)
-	var regexCite = regexp.MustCompile(`(\""[^\"]*\"")`)
+	regexBold := regexp.MustCompile(`(\*\*[^\*]*\*\*)|(__[^_]*__)`)
+	regexItalic := regexp.MustCompile(`(\*[^\*]*\*)|(_[^_]*_)`)
+	regexStrike := regexp.MustCompile(`(\~~[^\~]*\~~)`)
+	regexCite := regexp.MustCompile(`(\""[^\"]*\"")`)
 
-	var ocur string = regexBold.FindString(*line)
+	ocur := regexBold.FindString(*line)
 	for len(ocur) > 0 {
 		parsed := "<b>" + ocur[2:len(ocur)-2] + "</b>"
 		*line = strings.Replace(*line, ocur, parsed, 1)
@@ -161,8 +161,8 @@ func processOrderedLists(line *string) {
 }
 
 func processMedia(line *string) {
-	var regex = regexp.MustCompile(`\!\[[^\[]*\]\([^(]*\)`)
-	var ocur string = regex.FindString(*line)
+	regex := regexp.MustCompile(`\!\[[^\[]*\]\([^(]*\)`)
+	ocur := regex.FindString(*line)
 
 	for len(ocur) > 0 {
 		var parts []string = strings.Split(ocur, "](")
@@ -191,13 +191,13 @@ func processMedia(line *string) {
 }
 
 func processLinks(line *string) {
-	var regex = regexp.MustCompile(`\[[^\[]*\]\([^(]*\)`)
-	var ocur string = regex.FindString(*line)
+	regex := regexp.MustCompile(`\[[^\[]*\]\([^(]*\)`)
+	ocur := regex.FindString(*line)
 	for len(ocur) > 0 {
-		var parts []string = strings.Split(ocur, "](")
+		parts := strings.Split(ocur, "](")
 		parts[0] = strings.Replace(parts[0], "[", "", 1)
 		parts[1] = strings.Replace(parts[1], ")", "", 1)
-		var parsedLink string = addIdentifiers("<a href='"+parts[1]+"'>") + parts[0] + "</a>"
+		parsedLink := addIdentifiers("<a href='"+parts[1]+"'>") + parts[0] + "</a>"
 		*line = strings.Replace(*line, ocur, parsedLink, 1)
 		ocur = regex.FindString(*line)
 	}
